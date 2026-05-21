@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>물 탐험대: 자격 테스트</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Jua&family=Pretendard:wght@400;600;700&display=swap');
+
+        :root {
+            --primary-color: #7BA1D2; /* 파스텔 톤 블루 */
+            --primary-hover: #638CBF;
+            --bg-color: #F4F7F6; /* 미니멀한 라이트 그레이/블루 배경 */
+            --text-color: #2C3E50;
+        }
+
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, .font-jua {
+            font-family: 'Jua', sans-serif;
+        }
+
+        /* 뷰포트 중앙에 위치할 메인 카드 */
+        #app-container {
+            width: 100%;
+            max-width: 600px;
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            position: relative;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+            margin: 20px;
+        }
+
+        /* 애니메이션 클래스 */
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        
+        .slide-up {
+            animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 버튼 기본 스타일 */
+        .btn {
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: none;
+            outline: none;
+        }
+        .btn:active {
+            transform: scale(0.96);
+        }
+
+        /* 프로그레스 바 */
+        .progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background-color: #E2E8F0;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: var(--primary-color);
+            width: 0%;
+            transition: width 0.4s ease-out;
+        }
+
+        /* 선택지 버튼 스타일 (OX, 객관식) */
+        .option-btn {
+            background-color: #F8FAFC;
+            border: 2px solid #E2E8F0;
+            border-radius: 16px;
+            padding: 16px;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-color);
+            width: 100%;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        .option-btn:hover {
+            border-color: var(--primary-color);
+            background-color: #EFF6FF;
+        }
+
+        /* OX 버튼 전용 스타일 */
+        .ox-container {
+            display: flex;
+            gap: 16px;
+        }
+        .ox-btn {
+            flex: 1;
+            font-size: 3rem;
+            font-family: 'Jua', sans-serif;
+            padding: 20px;
+            border-radius: 20px;
+        }
+
+        /* 입력 폼 스타일 (단답형, 서술형) */
+        .input-text {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #E2E8F0;
+            border-radius: 16px;
+            font-size: 1.125rem;
+            outline: none;
+            transition: border-color 0.2s;
+            background-color: #F8FAFC;
+        }
+        .input-text:focus {
+            border-color: var(--primary-color);
+            background-color: #fff;
+        }
+
+        /* 모달 오버레이 */
+        #feedback-modal {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255, 255, 255, 0.95);
+            z-index: 50;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 32px;
+            text-align: center;
+        }
+        #feedback-modal.active {
+            display: flex;
+            animation: fadeIn 0.3s;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            flex: 1;
+            padding: 32px;
+        }
+        .screen.active {
+            display: flex;
+        }
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    
+    <!-- 인트로 화면 -->
+    <div id="intro-screen" class="screen active fade-in text-center justify-center">
+        <div class="mb-6">
+            <span class="text-5xl">💧</span>
+        </div>
+        <h1 class="text-3xl md:text-4xl text-[#7BA1D2] mb-4">물 탐험대<br><span class="text-2xl md:text-3xl text-gray-700">정식 대원 선발 테스트</span></h1>
+        <p class="text-gray-600 mb-8 leading-relaxed text-lg">
+            물 왕국을 구하기 위한 여정에 오를 준비가 되었나요?<br>
+            탐험대가 되기 위해선 '물의 상태 변화'에 대해 잘 알아야 해요.<br>
+            총 10개의 테스트를 통과하면 정식 대원으로 임명됩니다!
+        </p>
+        <button onclick="startQuiz()" class="btn bg-[#7BA1D2] hover:bg-[#638CBF] text-white font-jua text-2xl py-4 px-10 rounded-full shadow-lg">
+            테스트 시작하기
+        </button>
+    </div>
+
+    <!-- 퀴즈 화면 -->
+    <div id="quiz-screen" class="screen p-0">
+        <div class="progress-bar-container">
+            <div id="progress" class="progress-bar"></div>
+        </div>
+        <div class="p-6 md:p-8 flex flex-col flex-1">
+            <div class="flex justify-between items-center mb-6">
+                <span id="q-number" class="font-jua text-[#7BA1D2] text-xl bg-blue-50 px-4 py-1 rounded-full">Q. 1</span>
+                <span id="q-type" class="text-gray-400 font-semibold text-sm">OX형</span>
+            </div>
+            
+            <h2 id="q-text" class="text-2xl font-bold mb-8 leading-snug break-keep">질문 내용이 여기에 들어갑니다.</h2>
+            
+            <div id="q-options" class="flex-1 flex flex-col justify-end pb-4">
+                <!-- 동적으로 버튼 또는 입력창이 생성됨 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 피드백 모달 -->
+    <div id="feedback-modal">
+        <div id="feedback-icon" class="text-6xl mb-4 slide-up">⭕</div>
+        <h3 id="feedback-title" class="text-3xl font-jua mb-4 slide-up">정답입니다!</h3>
+        <p id="feedback-desc" class="text-gray-600 text-lg mb-8 slide-up" style="animation-delay: 0.1s;"></p>
+        <button onclick="nextQuestion()" class="btn w-full max-w-xs bg-gray-800 text-white font-jua text-xl py-4 rounded-full shadow-md slide-up" style="animation-delay: 0.2s;">
+            다음으로
+        </button>
+    </div>
+
+    <!-- 결과 화면 -->
+    <div id="result-screen" class="screen text-center justify-center">
+        <div id="result-emoji" class="text-6xl mb-4">🎉</div>
+        <h2 id="result-title" class="text-3xl md:text-4xl font-jua text-[#7BA1D2] mb-2">테스트 결과</h2>
+        <p class="text-gray-500 mb-6">총 10문제 중</p>
+        <div class="text-6xl font-bold font-jua text-gray-800 mb-8">
+            <span id="final-score" class="text-[#7BA1D2]">0</span><span class="text-3xl text-gray-400">점</span>
+        </div>
+        
+        <p id="result-message" class="text-lg text-gray-600 mb-8 font-semibold leading-relaxed"></p>
+        
+        <div id="result-actions" class="flex flex-col gap-4">
+            <!-- 동적으로 버튼 생성 (합격/불합격) -->
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // 퀴즈 데이터
+    const quizData = [
+        {
+            type: 'ox',
+            label: 'OX형',
+            question: '물이 얼면 부피가 늘어난다.',
+            answer: 'O',
+            explanation: '물이 얼음으로 상태가 변하면 부피가 늘어납니다. 그래서 물을 가득 채운 유리병을 얼리면 깨질 수 있어요.'
+        },
+        {
+            type: 'ox',
+            label: 'OX형',
+            question: '물이 얼면 무게도 늘어난다.',
+            answer: 'X',
+            explanation: '물이 얼거나 얼음이 녹아도 무게는 변하지 않아요! 부피만 변하고 무게는 그대로입니다.'
+        },
+        {
+            type: 'ox',
+            label: 'OX형',
+            question: '수증기는 눈에 보이는 기체이다.',
+            answer: 'X',
+            explanation: '수증기는 눈에 보이지 않는 기체입니다. 주전자에서 나오는 하얀 김은 수증기가 식어서 된 작은 물방울(액체)이에요.'
+        },
+        {
+            type: 'mcq',
+            label: '4지선다형',
+            question: '물의 세 가지 상태에 해당하지 않는 것은?',
+            options: ['얼음 (고체)', '물 (액체)', '구름', '수증기 (기체)'],
+            answer: 2, // 0-indexed, '구름'
+            explanation: '물은 고체(얼음), 액체(물), 기체(수증기)의 세 가지 상태로 존재합니다. 구름은 작은 물방울이나 얼음 결정으로 이루어져 있어요.'
+        },
+        {
+            type: 'mcq',
+            label: '4지선다형',
+            question: '차가운 음료수병 표면에 물방울이 맺히는 현상과 관련된 것은?',
+            options: ['증발', '끓음', '응결', '얼음이 녹는 것'],
+            answer: 2,
+            explanation: '공기 중의 수증기가 차가운 병 표면에 닿아 식으면서 액체인 물방울로 변하는 현상을 "응결"이라고 합니다.'
+        },
+        {
+            type: 'mcq',
+            label: '4지선다형',
+            question: '끓음에서만 나타나는 현상으로 옳은 것은?',
+            options: [
+                '물이 수증기로 변한다', 
+                '물의 표면에서 상태 변화가 일어난다', 
+                '물속에서도 기포가 생기며 상태 변화가 일어난다', 
+                '물의 양이 줄어든다'
+            ],
+            answer: 2,
+            explanation: '증발과 끓음 모두 물이 수증기로 변하지만, "끓음"은 물속에서도 기포가 생기며 훨씬 빠르게 상태 변화가 일어납니다.'
+        },
+        {
+            type: 'short',
+            label: '단답형',
+            question: '물의 표면에서만 물이 수증기로 상태가 변하는 현상을 무엇이라고 하나요?',
+            answer: '증발',
+            explanation: '젖은 빨래가 마르거나, 물로 쓴 글씨가 사라지는 것 모두 "증발"의 예시입니다.'
+        },
+        {
+            type: 'short',
+            label: '단답형',
+            question: '물의 표면과 물속 모두에서 물이 수증기로 상태가 변하는 현상을 무엇이라고 하나요?',
+            answer: '끓음',
+            explanation: '물이 보글보글 끓으며 기포가 생기는 현상을 "끓음"이라고 해요.'
+        },
+        {
+            type: 'essay',
+            label: '서술형',
+            question: '주스가 가득 담긴 유리병을 냉동실에 넣어 두면 안 되는 까닭은 무엇일까요?',
+            placeholder: '이유를 자유롭게 적어보세요.',
+            validation: (input) => {
+                const str = input.replace(/\s/g, ''); // 공백 제거 후 검사
+                return str.includes('부피') && (str.includes('깨진') || str.includes('깨질') || str.includes('늘어'));
+            },
+            explanation: '주스가 얼면 "부피"가 "늘어나서" 유리병이 "깨질 수 있기" 때문입니다.'
+        },
+        {
+            type: 'short',
+            label: '초성퀴즈',
+            question: '물이 얼음, 물, 수증기로 변하는 현상\n[ ㅅ ㅌ ㅂ ㅎ ]',
+            answer: '상태변화',
+            explanation: '이처럼 물질의 상태가 변하는 것을 "상태 변화"라고 부릅니다.'
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+
+    const introScreen = document.getElementById('intro-screen');
+    const quizScreen = document.getElementById('quiz-screen');
+    const resultScreen = document.getElementById('result-screen');
+    const feedbackModal = document.getElementById('feedback-modal');
+
+    // 유틸리티: 화면 전환
+    function switchScreen(screenElement) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        screenElement.classList.add('active');
+        screenElement.classList.add('fade-in');
+    }
+
+    // 퀴즈 시작
+    function startQuiz() {
+        currentQuestionIndex = 0;
+        score = 0;
+        switchScreen(quizScreen);
+        renderQuestion();
+    }
+
+    // 질문 렌더링
+    function renderQuestion() {
+        const q = quizData[currentQuestionIndex];
+        
+        // 진행률 업데이트
+        const progressPercent = ((currentQuestionIndex) / quizData.length) * 100;
+        document.getElementById('progress').style.width = `${progressPercent}%`;
+
+        // 질문 텍스트 및 메타데이터 세팅
+        document.getElementById('q-number').innerText = `Q. ${currentQuestionIndex + 1}`;
+        document.getElementById('q-type').innerText = q.label;
+        document.getElementById('q-text').innerText = q.question;
+
+        const optionsContainer = document.getElementById('q-options');
+        optionsContainer.innerHTML = ''; // 초기화
+
+        // 문제 유형에 따른 입력부 생성
+        if (q.type === 'ox') {
+            optionsContainer.className = 'flex-1 flex flex-col justify-end pb-4 slide-up';
+            const oxDiv = document.createElement('div');
+            oxDiv.className = 'ox-container';
+            oxDiv.innerHTML = `
+                <button class="btn option-btn ox-btn text-blue-500" onclick="submitAnswer('O')">O</button>
+                <button class="btn option-btn ox-btn text-red-500" onclick="submitAnswer('X')">X</button>
+            `;
+            optionsContainer.appendChild(oxDiv);
+        } 
+        else if (q.type === 'mcq') {
+            optionsContainer.className = 'flex-1 flex flex-col justify-end pb-4 slide-up';
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => submitAnswer(index);
+                optionsContainer.appendChild(btn);
+            });
+        }
+        else if (q.type === 'short' || q.type === 'essay') {
+            optionsContainer.className = 'flex-1 flex flex-col justify-end pb-4 slide-up';
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'input-text mb-4';
+            input.placeholder = q.placeholder || '정답을 입력하세요...';
+            input.id = 'answer-input';
+            
+            // 엔터키 제출
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') submitInputAnswer();
+            });
+
+            const submitBtn = document.createElement('button');
+            submitBtn.className = 'btn w-full bg-[#7BA1D2] hover:bg-[#638CBF] text-white font-jua text-xl py-4 rounded-xl';
+            submitBtn.innerText = '정답 확인';
+            submitBtn.onclick = submitInputAnswer;
+
+            optionsContainer.appendChild(input);
+            optionsContainer.appendChild(submitBtn);
+
+            // 포커스 주기
+            setTimeout(() => input.focus(), 100);
+        }
+    }
+
+    // 주관식 답변 가져오기
+    function submitInputAnswer() {
+        const inputVal = document.getElementById('answer-input').value;
+        if (!inputVal.trim()) {
+            alert('정답을 입력해주세요!');
+            return;
+        }
+        submitAnswer(inputVal);
+    }
+
+    // 정답 체크
+    function submitAnswer(userAnswer) {
+        const q = quizData[currentQuestionIndex];
+        let isCorrect = false;
+
+        if (q.type === 'essay') {
+            isCorrect = q.validation(userAnswer);
+        } else if (q.type === 'short') {
+            // 공백 제거 후 비교 (상태변화 == 상태 변화)
+            const cleanUser = userAnswer.replace(/\s/g, '');
+            const cleanAnswer = q.answer.replace(/\s/g, '');
+            isCorrect = (cleanUser === cleanAnswer);
+        } else {
+            isCorrect = (userAnswer === q.answer);
+        }
+
+        if (isCorrect) score += 10;
+        showFeedback(isCorrect, q.explanation);
+    }
+
+    // 피드백 모달 표시
+    function showFeedback(isCorrect, explanation) {
+        const modal = document.getElementById('feedback-modal');
+        const icon = document.getElementById('feedback-icon');
+        const title = document.getElementById('feedback-title');
+        const desc = document.getElementById('feedback-desc');
+
+        if (isCorrect) {
+            icon.innerText = '⭕';
+            icon.className = 'text-7xl mb-2 text-green-500 drop-shadow-md';
+            title.innerText = '정답입니다!';
+            title.className = 'text-3xl font-jua mb-4 text-green-600';
+        } else {
+            icon.innerText = '❌';
+            icon.className = 'text-7xl mb-2 text-red-500 drop-shadow-md';
+            title.innerText = '아쉬워요!';
+            title.className = 'text-3xl font-jua mb-4 text-red-500';
+        }
+
+        desc.innerText = explanation;
+        modal.classList.add('active');
+    }
+
+    // 다음 문제로 이동
+    function nextQuestion() {
+        const modal = document.getElementById('feedback-modal');
+        modal.classList.remove('active');
+
+        currentQuestionIndex++;
+        
+        if (currentQuestionIndex < quizData.length) {
+            renderQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    // 결과 화면 표시
+    function showResult() {
+        document.getElementById('progress').style.width = `100%`;
+        switchScreen(resultScreen);
+
+        const scoreEl = document.getElementById('final-score');
+        const msgEl = document.getElementById('result-message');
+        const actionsEl = document.getElementById('result-actions');
+        const emojiEl = document.getElementById('result-emoji');
+        
+        actionsEl.innerHTML = ''; // 초기화
+
+        // 애니메이션 카운트 효과
+        let currentScore = 0;
+        const interval = setInterval(() => {
+            currentScore += 5;
+            scoreEl.innerText = currentScore;
+            if (currentScore >= score) {
+                clearInterval(interval);
+                scoreEl.innerText = score;
+                
+                // 결과 로직
+                if (score >= 70) {
+                    emojiEl.innerText = '🎖️';
+                    msgEl.innerHTML = '축하합니다!<br>훌륭한 지식을 갖춘 <span class="text-[#7BA1D2] font-bold">물 탐험대 정식 대원</span>으로 임명합니다!';
+                    
+                    const gameBtn = document.createElement('button');
+                    gameBtn.className = 'btn w-full bg-blue-500 hover:bg-blue-600 text-white font-jua text-2xl py-4 rounded-2xl shadow-lg mt-4 slide-up';
+                    gameBtn.innerText = '물 왕국 구하러 가기 🚀';
+                    // 현재 창이 아닌 새 탭/창으로 열리도록 수정
+                    gameBtn.onclick = () => window.open('https://kkankong32-alt.github.io/watercycle/', '_blank');
+                    actionsEl.appendChild(gameBtn);
+                    
+                    // 합격 시에도 다시 풀기 버튼 추가
+                    const retryBtn = document.createElement('button');
+                    retryBtn.className = 'btn w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-jua text-xl py-4 rounded-2xl shadow mt-2 slide-up';
+                    retryBtn.innerText = '다시 풀기 🔄';
+                    retryBtn.onclick = startQuiz;
+                    actionsEl.appendChild(retryBtn);
+
+                } else {
+                    emojiEl.innerText = '📚';
+                    msgEl.innerHTML = '물 왕국으로 가기엔 조금 더 공부가 필요해요.<br>포기하지 말고 다시 도전해 볼까요?';
+                    
+                    const retryBtn = document.createElement('button');
+                    retryBtn.className = 'btn w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-jua text-xl py-4 rounded-2xl shadow mt-4 slide-up';
+                    retryBtn.innerText = '다시 풀기 🔄';
+                    retryBtn.onclick = startQuiz;
+                    actionsEl.appendChild(retryBtn);
+                }
+            }
+        }, 30);
+    }
+</script>
+
+</body>
+</html>
