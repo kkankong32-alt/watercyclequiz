@@ -234,6 +234,51 @@
 </div>
 
 <script>
+    // --- Web Audio API를 활용한 효과음 시스템 ---
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const audioCtx = new AudioContext();
+
+    function playTone(freq, type, duration, vol = 0.1) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+    }
+
+    const sfx = {
+        correct: () => {
+            playTone(523.25, 'sine', 0.1, 0.1); // 도
+            setTimeout(() => playTone(659.25, 'sine', 0.15, 0.1), 100); // 미
+            setTimeout(() => playTone(783.99, 'sine', 0.2, 0.1), 200); // 솔
+        },
+        wrong: () => {
+            playTone(150, 'sawtooth', 0.2, 0.05); // 낮은 부저음
+            setTimeout(() => playTone(100, 'sawtooth', 0.3, 0.05), 150);
+        },
+        click: () => {
+            playTone(400, 'sine', 0.05, 0.05); // 짧은 클릭음
+        },
+        success: () => {
+            playTone(523.25, 'sine', 0.15, 0.1); 
+            setTimeout(() => playTone(659.25, 'sine', 0.15, 0.1), 150); 
+            setTimeout(() => playTone(783.99, 'sine', 0.15, 0.1), 300); 
+            setTimeout(() => playTone(1046.50, 'sine', 0.4, 0.1), 450); // 높은 도 (팡파르)
+        },
+        fail: () => {
+            playTone(300, 'triangle', 0.2, 0.1);
+            setTimeout(() => playTone(250, 'triangle', 0.2, 0.1), 200);
+            setTimeout(() => playTone(200, 'triangle', 0.4, 0.1), 400); // 하강하는 아쉬운 소리
+        }
+    };
+    // ------------------------------------------
+
     // 퀴즈 데이터
     const quizData = [
         {
@@ -337,6 +382,9 @@
 
     // 퀴즈 시작
     function startQuiz() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        sfx.click();
+        
         currentQuestionIndex = 0;
         score = 0;
         switchScreen(quizScreen);
@@ -445,11 +493,13 @@
         const desc = document.getElementById('feedback-desc');
 
         if (isCorrect) {
+            sfx.correct();
             icon.innerText = '⭕';
             icon.className = 'text-7xl mb-2 text-green-500 drop-shadow-md';
             title.innerText = '정답입니다!';
             title.className = 'text-3xl font-jua mb-4 text-green-600';
         } else {
+            sfx.wrong();
             icon.innerText = '❌';
             icon.className = 'text-7xl mb-2 text-red-500 drop-shadow-md';
             title.innerText = '아쉬워요!';
@@ -462,6 +512,7 @@
 
     // 다음 문제로 이동
     function nextQuestion() {
+        sfx.click();
         const modal = document.getElementById('feedback-modal');
         modal.classList.remove('active');
 
@@ -497,17 +548,19 @@
                 
                 // 결과 로직
                 if (score >= 70) {
+                    sfx.success();
                     emojiEl.innerText = '🎖️';
                     msgEl.innerHTML = '축하합니다!<br>훌륭한 지식을 갖춘 <span class="text-[#7BA1D2] font-bold">물 탐험대 정식 대원</span>으로 임명합니다!';
                     
                     const gameBtn = document.createElement('button');
                     gameBtn.className = 'btn w-full bg-blue-500 hover:bg-blue-600 text-white font-jua text-2xl py-4 rounded-2xl shadow-lg mt-4 slide-up';
                     gameBtn.innerText = '물 왕국 구하러 가기 🚀';
-                    // 현재 창이 아닌 새 탭/창으로 열리도록 수정
-                    gameBtn.onclick = () => window.open('https://kkankong32-alt.github.io/watercycle/', '_blank');
+                    gameBtn.onclick = () => {
+                        sfx.click();
+                        window.open('https://kkankong32-alt.github.io/watercycle/', '_blank');
+                    };
                     actionsEl.appendChild(gameBtn);
                     
-                    // 합격 시에도 다시 풀기 버튼 추가
                     const retryBtn = document.createElement('button');
                     retryBtn.className = 'btn w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-jua text-xl py-4 rounded-2xl shadow mt-2 slide-up';
                     retryBtn.innerText = '다시 풀기 🔄';
@@ -515,6 +568,7 @@
                     actionsEl.appendChild(retryBtn);
 
                 } else {
+                    sfx.fail();
                     emojiEl.innerText = '📚';
                     msgEl.innerHTML = '물 왕국으로 가기엔 조금 더 공부가 필요해요.<br>포기하지 말고 다시 도전해 볼까요?';
                     
